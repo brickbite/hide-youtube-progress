@@ -23,6 +23,10 @@ Note: This extension is currently in developer mode only, and is not yet publish
 - adds serviceworker to set initial variable in browser storage
 - updates contentScript to check against browser storage on page load / refresh
 - adds html / css / js / images for popup - controls initial variable in browser storage
+- handles promises when getting from browser storage in contentScript
+- adds check for mutation.type back to MutationObserver
+- changes global toggle slider to a simpler checkbox
+- removes toggle button on player with a click handler on time display
 
 ## v0.1 - 2021-05-24
 - initial proof of concept

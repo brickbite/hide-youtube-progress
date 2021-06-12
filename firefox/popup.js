@@ -1,15 +1,8 @@
-let input = document.getElementById('toggleInput');
-
 const storageName = 'hideYtTimes';
 
 function onError(error) {
   console.error(error);
 }
-
-// on opening popup, set state of toggle to match storage
-browser.storage.local.get(storageName).then((result) => {
-  input.checked = result[storageName];
-}, onError);
 
 function handleChange() {
   browser.storage.local.get(storageName).then((result) => {
@@ -18,4 +11,17 @@ function handleChange() {
     });
   }, onError);
 }
-input.onchange = handleChange;
+
+// on opening popup, set state of toggle to match storage
+browser.storage.local.get(storageName).then((result) => {
+  const container = document.getElementById('toggleContainer');
+  const input = document.getElementById('toggleInput');
+
+  if (!container || !input) {
+    return;
+  }
+
+  input.checked = result[storageName];
+  input.onchange = handleChange;
+  container.prepend(input);
+}, onError);

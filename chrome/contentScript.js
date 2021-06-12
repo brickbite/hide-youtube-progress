@@ -6,20 +6,38 @@ console.log('contentScript start');
 
 const windowVarName = '__hideYtTimes';
 const storageName = 'hideYtTimes';
+const toggleButtonId = 'time-display-show';
 
-function toggleHideWindowVar() {
-  chrome.storage.local.get([storageName], function (result) {
-    // new windows will initially show/hide based on the value in storage
-    if (window[windowVarName] === undefined) {
-      window[windowVarName] = result[storageName];
-    } else {
-      window[windowVarName] = !window[windowVarName];
-    }
+function logError(error) {
+  console.error(error);
+}
+
+function getStorageVar() {
+  // Note: Once the Storage API gains promise support, this function can be greatly simplified.
+  return new Promise((resolve, reject) => {
+    chrome.storage.local.get(storageName, (items) => {
+      if (chrome.runtime.lastError) {
+        return reject(chrome.runtime.lastError);
+      }
+      resolve(items);
+    });
   });
 }
 
-// run this at beginning to set to true by default
-toggleHideWindowVar();
+function updateWindowVar(initial) {
+  if (window[windowVarName] === undefined) {
+    window[windowVarName] = initial;
+  } else {
+    window[windowVarName] = !window[windowVarName];
+  }
+}
+
+function setInitialWindowVar() {
+  return getStorageVar().then((result) => {
+    // new windows will initially show/hide based on the value in storage
+    updateWindowVar(result[storageName]);
+  }, logError);
+}
 
 function updateElementVisibility(element) {
   if (!element || !element.style) {
@@ -31,6 +49,19 @@ function updateElementVisibility(element) {
     element.style.display = 'none';
   } else if (window[windowVarName] === false) {
     element.style.display = 'inline';
+  }
+}
+
+function updateToggleButtonVisibility(toggleButton) {
+  if (!toggleButton) {
+    return;
+  }
+
+  // toggleButton follows the opposite logic from youtube's elements
+  if (window[windowVarName] === true) {
+    toggleButton.style.display = 'inline';
+  } else if (window[windowVarName] === false) {
+    toggleButton.style.display = 'none';
   }
 }
 
@@ -62,9 +93,6 @@ function updateVideoPlayerProgress() {
   // const parentSelector = '#movie_player > div.ytp-chrome-bottom >'
   const progressBarSelector = 'div.ytp-progress-bar-container';
 
-  const separatorSelector =
-    'div.ytp-chrome-controls > div.ytp-left-controls > div.ytp-time-display.notranslate > span.ytp-time-separator';
-
   const totalTimeSelector =
     'div.ytp-chrome-controls > div.ytp-left-controls > div.ytp-time-display.notranslate > span.ytp-time-duration';
 
@@ -75,12 +103,64 @@ function updateVideoPlayerProgress() {
 
   const playerSelectors = [
     progressBarSelector,
-    separatorSelector,
     totalTimeSelector,
     thumbnailTimeSelector,
   ];
 
   playerSelectors.forEach(selectAndUpdateElement);
+
+  // toggleButton follows the opposite logic from youtube's elements
+  const toggleButton = document.getElementById(toggleButtonId);
+  if (!toggleButton) {
+    return;
+  }
+
+  updateToggleButtonVisibility(toggleButton);
+}
+
+/*****************
+ * hide or show relevant elements on current page
+ *****************/
+function updateVisual() {
+  updateThumbnailTimestamps();
+  updateVideoPlayerProgress();
+}
+
+/*****************
+ * function to toggle per page, used after page has loaded
+ *****************/
+function toggleHideShow() {
+  // console.log('toggleHideShow')
+  updateWindowVar();
+  updateVisual();
+}
+
+/*****************
+ * adds toggle control to the youtube player's time display
+ *****************/
+function addTimeControlHandler() {
+  const timeDisplaySelector =
+    'div.ytp-chrome-controls > div.ytp-left-controls > div.ytp-time-display';
+
+  const ytTimeDisplay = document.querySelector(timeDisplaySelector);
+
+  if (!ytTimeDisplay) {
+    return;
+  }
+
+  ytTimeDisplay.onclick = toggleHideShow;
+  ytTimeDisplay.style.cursor = 'pointer';
+
+  // toggle button that shows progress when it's hidden
+  const toggleButton = document.createElement('span');
+  toggleButton.setAttribute('id', toggleButtonId);
+  toggleButton.textContent = 'Show';
+
+  // set initial display style
+  updateToggleButtonVisibility(toggleButton);
+
+  // TODO: element ordering when the live indicator is showing?
+  ytTimeDisplay.append(toggleButton);
 }
 
 // this implementation uses MutationObserver API
@@ -92,48 +172,22 @@ const targetNode = document;
 // Options for the observer (which mutations to observe)
 const config = { attributes: true, childList: true, subtree: true };
 
-// Callback function to execute when mutations are observed
-function updateVisual(mutationsList, observer) {
-  // TODO: add early exit conditions to optimize this function. it shouldn't run the update functions on every observed mutation
+// Create an observer instance
+const observer = new MutationObserver((mutationsList, observer) => {
+  for (const mutation of mutationsList) {
+    // TODO: add more exit conditions if the element is not relevant
+    if (mutation.type !== 'childList') {
+      return;
+    }
 
-  updateThumbnailTimestamps();
-  updateVideoPlayerProgress();
-}
-
-// Create an observer instance linked to the callback function
-const observer = new MutationObserver(updateVisual);
-
-// Start observing the target node for configured mutations
-observer.observe(targetNode, config);
-
-/**
- * function to toggle per page, used after page has loaded
- */
-function toggleHideShow() {
-  // console.log('toggleHideShow')
-  toggleHideWindowVar();
-
-  // TODO: promisify and await toggleHideWindowVar, seems to be async?
-  updateVisual();
-}
-
-function appendToggleButton() {
-  const rightControlsSelector =
-    '#movie_player > div.ytp-chrome-bottom > div.ytp-chrome-controls > div.ytp-right-controls';
-  const ytRightControls = document.querySelector(rightControlsSelector);
-  if (!ytRightControls) {
-    return;
+    updateVisual();
   }
+});
 
-  const toggleButton = document.createElement('button');
-  toggleButton.className = 'ytp-button'; // apply youtube styles
-  toggleButton.style = 'vertical-align: top; margin-right: 1rem;'; // need this to align with existing svg buttons
-  // TODO: replace this with something better, maybe an overlay over total time or an svg
-  toggleButton.textContent = 'Toggle';
-  toggleButton.onclick = toggleHideShow;
-
-  ytRightControls.prepend(toggleButton);
-}
+// run this at beginning to set the default variable
+setInitialWindowVar().then(() => {
+  observer.observe(targetNode, config);
+}, logError);
 
 // stop observing and add manual controls after page has loaded
 window.onload = (event) => {
@@ -144,10 +198,10 @@ window.onload = (event) => {
   // TODO: investigate: .disconnect() seems to run before times are rendered on youtube homepage. find a event listener better than window.onload
   setTimeout(() => {
     observer.disconnect();
-  }, 2000);
+  }, 3000);
 
   // TODO: append toggle button as soon as player loads (instead of when page is done loading)
-  appendToggleButton();
+  addTimeControlHandler();
 
   // hotkey `s` for same behavior as button
   document.onkeyup = (event) => {
