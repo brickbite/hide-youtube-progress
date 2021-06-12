@@ -6,7 +6,8 @@ console.log('contentScript start');
 
 const windowVarName = '__hideYtTimes';
 const storageName = 'hideYtTimes';
-const toggleButtonId = 'time-display-show';
+const toggleButtonId = 'ext-time-display-show';
+const timeDisplayLabel = 'Hide/show duration and progress (s)';
 
 // relevant youtube selectors. ytp is youtube player
 const ytpTimeDisplaySelector = 'div.ytp-time-display';
@@ -146,6 +147,8 @@ function addTimeControlHandler() {
 
   ytTimeDisplay.onclick = toggleHideShow;
   ytTimeDisplay.style.cursor = 'pointer';
+  ytTimeDisplay.setAttribute('aria-label', timeDisplayLabel);
+  ytTimeDisplay.setAttribute('title', timeDisplayLabel);
 
   // toggle button that shows progress when it's hidden
   const toggleButton = document.createElement('span');
