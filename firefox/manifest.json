@@ -1,0 +1,13 @@
+{
+  "name": "Hide Youtube Progress",
+  "description": "Avoid spoilers by hiding progress bar / timestamp when watching youtube videos",
+  "version": "0.2",
+  "manifest_version": 2,
+  "content_scripts": [
+    {
+      "matches": ["https://*.youtube.com/*"],
+      "run_at": "document_start",
+      "js": ["contentScript.js"]
+    }
+  ]
+}
