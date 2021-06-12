@@ -22,14 +22,15 @@ function toggleHideWindowVar() {
 toggleHideWindowVar();
 
 function updateElementVisibility(element) {
-  if (!element.style) {
+  if (!element || !element.style) {
     return;
   }
 
+  // youtube scripts edit visibility on actions like hover, but they don't use display, so we use display here to show / hide elements
   if (window[windowVarName] === true) {
-    element.style.visibility = 'hidden';
+    element.style.display = 'none';
   } else if (window[windowVarName] === false) {
-    element.style.visibility = 'visible';
+    element.style.display = 'inline';
   }
 }
 
@@ -70,6 +71,8 @@ function updateVideoPlayerProgress() {
   const thumbnailTimeSelector =
     '#overlays > ytd-thumbnail-overlay-time-status-renderer';
 
+  // TODO: add selector for thumbnails at video end?
+
   const playerSelectors = [
     progressBarSelector,
     separatorSelector,
@@ -91,6 +94,8 @@ const config = { attributes: true, childList: true, subtree: true };
 
 // Callback function to execute when mutations are observed
 function updateVisual(mutationsList, observer) {
+  // TODO: add early exit conditions to optimize this function. it shouldn't run the update functions on every observed mutation
+
   updateThumbnailTimestamps();
   updateVideoPlayerProgress();
 }
@@ -107,19 +112,26 @@ observer.observe(targetNode, config);
 function toggleHideShow() {
   // console.log('toggleHideShow')
   toggleHideWindowVar();
+
+  // TODO: promisify and await toggleHideWindowVar, seems to be async?
   updateVisual();
 }
 
 function appendToggleButton() {
-  const toggleButton = document.createElement('button');
-  toggleButton.className = 'ytp-button'; // apply youtube styles
-  toggleButton.style = 'vertical-align: top; margin-right: 1rem;'; // need this to align with existing svg buttons
-  toggleButton.textContent = 'Toggle';
-  toggleButton.onclick = toggleHideShow;
-
   const rightControlsSelector =
     '#movie_player > div.ytp-chrome-bottom > div.ytp-chrome-controls > div.ytp-right-controls';
   const ytRightControls = document.querySelector(rightControlsSelector);
+  if (!ytRightControls) {
+    return;
+  }
+
+  const toggleButton = document.createElement('button');
+  toggleButton.className = 'ytp-button'; // apply youtube styles
+  toggleButton.style = 'vertical-align: top; margin-right: 1rem;'; // need this to align with existing svg buttons
+  // TODO: replace this with something better, maybe an overlay over total time or an svg
+  toggleButton.textContent = 'Toggle';
+  toggleButton.onclick = toggleHideShow;
+
   ytRightControls.prepend(toggleButton);
 }
 
@@ -127,8 +139,12 @@ function appendToggleButton() {
 window.onload = (event) => {
   console.log('page is fully loaded');
 
+  // disconnect observer for toggling performance after page has loaded
   // Note: when disconnecting here, user can scroll down and be spoiled by newly loaded video thumbnails? or comments (not hidden by this extension)?
-  observer.disconnect();
+  // TODO: investigate: .disconnect() seems to run before times are rendered on youtube homepage. find a event listener better than window.onload
+  setTimeout(() => {
+    observer.disconnect();
+  }, 2000);
 
   // TODO: append toggle button as soon as player loads (instead of when page is done loading)
   appendToggleButton();
