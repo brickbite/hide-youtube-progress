@@ -4,12 +4,23 @@
  */
 console.log('contentScript start');
 
+const windowVarName = '__hideYtTimes';
+const storageName = 'hideYtTimes';
+
 function toggleHideWindowVar() {
-  if (window.__hideYtTimes === undefined) {
-    window.__hideYtTimes = true;
-  } else {
-    window.__hideYtTimes = !window.__hideYtTimes;
-  }
+  browser.storage.local.get([storageName]).then(
+    function (result) {
+      // new windows will initially show/hide based on the value in storage
+      if (window[windowVarName] === undefined) {
+        window[windowVarName] = result[storageName];
+      } else {
+        window[windowVarName] = !window[windowVarName];
+      }
+    },
+    (error) => {
+      console.error(error);
+    }
+  );
 }
 
 // run this at beginning to set to true by default
@@ -20,9 +31,9 @@ function updateElementVisibility(element) {
     return;
   }
 
-  if (window.__hideYtTimes === true) {
+  if (window[windowVarName] === true) {
     element.style.visibility = 'hidden';
-  } else if (window.__hideYtTimes === false) {
+  } else if (window[windowVarName] === false) {
     element.style.visibility = 'visible';
   }
 }

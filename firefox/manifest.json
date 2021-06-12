@@ -9,5 +9,13 @@
       "run_at": "document_start",
       "js": ["contentScript.js"]
     }
-  ]
+  ],
+  "background": {
+    "scripts": ["serviceWorker.js"]
+  },
+  "permissions": ["storage"],
+  "browser_action": {
+    "default_icon": "images/cloak.png",
+    "default_popup": "popup.html"
+  }
 }

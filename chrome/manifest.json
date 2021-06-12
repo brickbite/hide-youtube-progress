@@ -11,5 +11,17 @@
       "js": ["contentScript.js"]
     }
   ],
-  "permissions": ["scripting"]
+  "background": {
+    "service_worker": "serviceWorker.js"
+  },
+  "permissions": ["storage", "scripting"],
+  "action": {
+    "default_popup": "popup.html"
+  },
+  "icons": {
+    "16": "/images/cloak.png",
+    "32": "/images/cloak.png",
+    "48": "/images/cloak.png",
+    "128": "/images/cloak.png"
+  }
 }
