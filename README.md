@@ -5,7 +5,7 @@ Note: This extension is currently in developer mode, and is not yet published.
 
 ## Background
 
-When watching vods of matches, the video's duration is usually shown. This can be telling of the result, since video length can correlate to how close or one-sided the match was. By hiding the progress bar and video duration, this extension brings the watching experience closer to that of a live stream.
+When watching vods of matches, the video's duration is usually shown. This can be telling of the result, since video length can correlate to how close or one-sided the match was. By hiding info such as the progress bar and video duration, this extension brings the watching experience closer to that of a live stream.
 
 ## Installing the extension
 
@@ -24,8 +24,9 @@ When watching vods of matches, the video's duration is usually shown. This can b
 - Note: changing the checkbox here does not affect any YouTube pages that are already open
 
 ### on the YouTube player
-- on a page with a YouTube video, the timestamp in the controls becomes clickable after the page loads. clicking this will toggle the visibility of relevant page elements: progress bar, total time, timestamps on thumbnails, timestamps on endscreen thumbnails
+- on a page with a YouTube video, the timestamp in the controls becomes clickable after the page loads. clicking this will toggle the visibility of relevant page elements
 - hotkey `alt` + `s` anywhere on the page does the same thing as above
+- controlling the youtube player: `left` / `right` arrow keys (or `j` / `l` keys) to seek. full list of keyboard shortcuts can be found [here](https://support.google.com/youtube/answer/7631406).
 
 ### on the YouTube homepage
 - when set to hide video times, video times on the YouTube homepage are also hidden

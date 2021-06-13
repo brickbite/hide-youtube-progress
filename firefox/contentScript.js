@@ -17,6 +17,16 @@ const ytpTotalTimeSelector = 'span.ytp-time-duration';
 const ytpProgressBarSelector = 'div.ytp-progress-bar-container';
 const ytpEndscreenTimeSelector = 'span.ytp-videowall-still-info-duration';
 const thumbnailTimeSelector = 'ytd-thumbnail-overlay-time-status-renderer';
+const commentsSectionSelector = 'ytd-comments';
+
+const relevantSelectors = [
+  ytpTimeDisplaySelector,
+  ytpTotalTimeSelector,
+  ytpProgressBarSelector,
+  ytpEndscreenTimeSelector,
+  thumbnailTimeSelector,
+  commentsSectionSelector,
+];
 
 function logError(error) {
   console.error(error);
@@ -103,11 +113,14 @@ function updateThumbnailTimestamps() {
  * remove singular elements on video player
  *****************/
 function updateVideoPlayerProgress() {
-  const playerSelectors = [ytpProgressBarSelector, ytpTotalTimeSelector];
+  const playerSelectors = [
+    ytpProgressBarSelector,
+    ytpTotalTimeSelector,
+    commentsSectionSelector,
+  ];
 
   playerSelectors.forEach(selectAndUpdateElement);
 
-  // toggleButton follows the opposite logic from youtube's elements
   const toggleButton = document.getElementById(toggleButtonId);
   if (!toggleButton) {
     // logError('updateVideoPlayerProgress: No toggleButton');
@@ -138,6 +151,12 @@ function toggleHideShow() {
  * adds toggle control to the youtube player's time display
  *****************/
 function addTimeControlHandler() {
+  // there should only be one player on the page at a time, so only one toggleButton to match. check if any existing before adding
+  const existingButton = document.getElementById(toggleButtonId);
+  if (!!existingButton) {
+    return;
+  }
+
   const ytTimeDisplay = document.querySelector(ytpTimeDisplaySelector);
 
   if (!ytTimeDisplay) {
@@ -180,27 +199,21 @@ const observer = new MutationObserver((mutationsList, observer) => {
 
     for (const node of mutation.addedNodes) {
       if (node.nodeType !== Node.ELEMENT_NODE) {
-        return;
+        continue;
       }
 
-      // TODO: add further exit conditions if node contains no relevant selectors
-      // commenting out logError() lines until this is done
-    }
+      const selected = node.querySelector(ytpTimeDisplaySelector);
+      if (!!selected) {
+        addTimeControlHandler();
+      }
 
-    updateVisual();
-  }
+      const selectorMatches = relevantSelectors.some((selector) => {
+        return !!node.querySelector(selector);
+      });
 
-  /**
-   * when starting from youtube homepage to a video while hiding progress,
-   * the toggleButton won't be rendered. we add toggleButton if it doesn't exist
-   */
-  if (location.href !== previousUrl) {
-    previousUrl = location.href;
-
-    const toggleButton = document.querySelector(toggleButtonId);
-
-    if (!toggleButton) {
-      addTimeControlHandler();
+      if (selectorMatches) {
+        updateVisual();
+      }
     }
   }
 });
@@ -214,9 +227,6 @@ setInitialWindowVar().then(() => {
 // add manual controls after page has loaded
 window.onload = (event) => {
   console.log('page is loaded');
-
-  // TODO: append toggle button on player load (instead of after page load)
-  addTimeControlHandler();
 
   // hotkey `alt` + `s` for same behavior as button
   document.onkeyup = (event) => {
