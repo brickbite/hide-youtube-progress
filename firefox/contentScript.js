@@ -229,7 +229,7 @@ window.onload = (event) => {
   console.log('page is loaded');
 
   // hotkey `alt` + `s` for same behavior as button
-  document.onkeyup = (event) => {
+  document.onkeydown = (event) => {
     if (event.altKey && event.code === 'KeyS') {
       toggleHideShow();
     }

@@ -6,12 +6,11 @@ console.log('contentScript start');
 
 const windowVarName = '__hideYtTimes';
 const storageName = 'hideYtTimes';
-const toggleButtonId = 'ext-time-display-show';
+const extTimeDurationId = 'ext-time-duration-show';
 const timeDisplayLabel = 'Hide/show duration and progress (ALT + s)';
 
-let previousUrl = '';
-
 // relevant youtube selectors. ytp is youtube player
+const ytPlayerSelector = 'ytd-player';
 const ytpTimeDisplaySelector = 'div.ytp-time-display';
 const ytpTotalTimeSelector = 'span.ytp-time-duration';
 const ytpProgressBarSelector = 'div.ytp-progress-bar-container';
@@ -20,6 +19,7 @@ const thumbnailTimeSelector = 'ytd-thumbnail-overlay-time-status-renderer';
 const commentsSectionSelector = 'ytd-comments';
 
 const relevantSelectors = [
+  ytPlayerSelector,
   ytpTimeDisplaySelector,
   ytpTotalTimeSelector,
   ytpProgressBarSelector,
@@ -79,22 +79,22 @@ function updateElementVisibility(element) {
   }
 }
 
-function updateToggleButtonVisibility(toggleButton) {
-  if (!toggleButton) {
-    // logError('updateToggleButtonVisibility: No toggleButton');
+function updateYtpDurationToggle(durationToggle) {
+  if (!durationToggle) {
+    // logError('updateYtpDurationToggle: No durationToggle');
     return;
   }
 
-  // toggleButton follows the opposite logic from youtube's elements
+  // durationToggle follows the opposite logic from youtube's elements
   if (window[windowVarName] === true) {
-    toggleButton.style.display = 'inline';
+    durationToggle.style.display = 'inline';
   } else if (window[windowVarName] === false) {
-    toggleButton.style.display = 'none';
+    durationToggle.style.display = 'none';
   }
 }
 
-function selectAndUpdateElement(selector) {
-  const element = document.querySelector(selector);
+function selectAndUpdateElement(selector, node = document) {
+  const element = node.querySelector(selector);
   if (!element) {
     // logError('selectAndUpdateElement: No element');
     return;
@@ -117,24 +117,49 @@ function updateThumbnailTimestamps() {
 }
 
 /*****************
- * remove singular elements on video player
+ * updates visibility of comments section
  *****************/
-function updateVideoPlayerProgress() {
-  const playerSelectors = [
-    ytpProgressBarSelector,
-    ytpTotalTimeSelector,
-    commentsSectionSelector,
-  ];
+function updateCommentsSection() {
+  selectAndUpdateElement(commentsSectionSelector);
+}
 
-  playerSelectors.forEach(selectAndUpdateElement);
-
-  const toggleButton = document.getElementById(toggleButtonId);
-  if (!toggleButton) {
-    // logError('updateVideoPlayerProgress: No toggleButton');
+/*****************
+ * update relevant elements on video player
+ *****************/
+function updateVideoPlayer(node) {
+  if (!node || !(node instanceof Element) || !node.matches(ytPlayerSelector)) {
+    // logError('updateVideoPlayer: node is not a YouTube player node');
     return;
   }
 
-  updateToggleButtonVisibility(toggleButton);
+  const playerSelectors = [ytpProgressBarSelector, ytpTotalTimeSelector];
+
+  playerSelectors.forEach((selector) => {
+    selectAndUpdateElement(selector, node);
+  });
+
+  // there should only durationToggle per player. check if any existing before adding.
+  let durationToggle = node.querySelector(`#${extTimeDurationId}`);
+  if (!durationToggle) {
+    const ytpTimeDisplay = node.querySelector(ytpTimeDisplaySelector);
+
+    if (!ytpTimeDisplay) {
+      // logError('updateVideoPlayer: No ytpTimeDisplay');
+      return;
+    }
+
+    ytpTimeDisplay.onclick = toggleHideShow;
+    ytpTimeDisplay.style.cursor = 'pointer';
+    ytpTimeDisplay.setAttribute('aria-label', timeDisplayLabel);
+    ytpTimeDisplay.setAttribute('title', timeDisplayLabel);
+
+    durationToggle = createShowDurationDisplay();
+
+    // TODO: element ordering when the live indicator is showing?
+    ytpTimeDisplay.append(durationToggle);
+  }
+
+  updateYtpDurationToggle(durationToggle);
 }
 
 /*****************
@@ -142,7 +167,18 @@ function updateVideoPlayerProgress() {
  *****************/
 function updateVisual() {
   updateThumbnailTimestamps();
-  updateVideoPlayerProgress();
+  updateCommentsSection();
+
+  /**
+   * there may be multiple players on a page so we use querySelectorAll().
+   * we search by totalTime, since that is one of the last relevant elements
+   * to be rendered, and we can be more sure the other elements exist
+   */
+  const totalTimes = document.querySelectorAll(ytpTotalTimeSelector);
+  totalTimes.forEach((durationNode) => {
+    const ytPlayer = durationNode.closest(ytPlayerSelector);
+    updateVideoPlayer(ytPlayer);
+  });
 }
 
 /*****************
@@ -155,37 +191,17 @@ function toggleHideShow() {
 }
 
 /*****************
- * adds toggle control to the youtube player's time display
+ * indicator that shows when video player's duration is being hidden
  *****************/
-function addTimeControlHandler() {
-  // there should only be one player on the page at a time, so only one toggleButton to match. check if any existing before adding
-  const existingButton = document.getElementById(toggleButtonId);
-  if (!!existingButton) {
-    return;
-  }
-
-  const ytTimeDisplay = document.querySelector(ytpTimeDisplaySelector);
-
-  if (!ytTimeDisplay) {
-    // logError('addTimeControlHandler: No ytTimeDisplay');
-    return;
-  }
-
-  ytTimeDisplay.onclick = toggleHideShow;
-  ytTimeDisplay.style.cursor = 'pointer';
-  ytTimeDisplay.setAttribute('aria-label', timeDisplayLabel);
-  ytTimeDisplay.setAttribute('title', timeDisplayLabel);
-
-  // toggle button that shows progress when it's hidden
-  const toggleButton = document.createElement('span');
-  toggleButton.setAttribute('id', toggleButtonId);
-  toggleButton.textContent = 'Show';
+function createShowDurationDisplay() {
+  const durationToggle = document.createElement('span');
+  durationToggle.setAttribute('id', extTimeDurationId);
+  durationToggle.textContent = 'Show';
 
   // set initial display style
-  updateToggleButtonVisibility(toggleButton);
+  updateYtpDurationToggle(durationToggle);
 
-  // TODO: element ordering when the live indicator is showing?
-  ytTimeDisplay.append(toggleButton);
+  return durationToggle;
 }
 
 // this implementation uses MutationObserver API
@@ -209,20 +225,14 @@ const observer = new MutationObserver((mutationsList, observer) => {
         continue;
       }
 
-      const selected = node.querySelector(ytpTimeDisplaySelector);
-      if (!!selected) {
-        addTimeControlHandler();
-      }
-
-      const selectorMatches = relevantSelectors.some((selector) => {
-        return !!node.querySelector(selector);
-      });
-
-      if (selectorMatches) {
-        updateVisual();
-      }
+      updateVisual();
     }
   }
+
+  /**
+   * Note: doing updateVisual() here (outisde of mutationsList) will make
+   * the element pop up first, then be hidden from dom after it's been rendered
+   */
 });
 
 // run this at beginning to set the default variable
@@ -231,12 +241,12 @@ setInitialWindowVar().then(() => {
   observer.observe(targetNode, config);
 }, logError);
 
-// add manual controls after page has loaded
+// add keyboard shortcut after page has loaded
 window.onload = (event) => {
   console.log('page is loaded');
 
   // hotkey `alt` + `s` for same behavior as button
-  document.onkeyup = (event) => {
+  document.onkeydown = (event) => {
     if (event.altKey && event.code === 'KeyS') {
       toggleHideShow();
     }
