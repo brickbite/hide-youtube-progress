@@ -51,6 +51,7 @@ function setInitialWindowVar() {
 
 function updateElementVisibility(element) {
   if (!element || !element.style) {
+    logError('updateElementVisibility: No element or no element.style');
     return;
   }
 
@@ -70,6 +71,7 @@ function updateElementVisibility(element) {
 
 function updateToggleButtonVisibility(toggleButton) {
   if (!toggleButton) {
+    logError('updateToggleButtonVisibility: No toggleButton');
     return;
   }
 
@@ -84,6 +86,7 @@ function updateToggleButtonVisibility(toggleButton) {
 function selectAndUpdateElement(selector) {
   const element = document.querySelector(selector);
   if (!element) {
+    logError('selectAndUpdateElement: No element');
     return;
   }
   // console.log(element);
@@ -114,6 +117,7 @@ function updateVideoPlayerProgress() {
   // toggleButton follows the opposite logic from youtube's elements
   const toggleButton = document.getElementById(toggleButtonId);
   if (!toggleButton) {
+    logError('updateVideoPlayerProgress: No toggleButton');
     return;
   }
 
@@ -144,6 +148,7 @@ function addTimeControlHandler() {
   const ytTimeDisplay = document.querySelector(ytpTimeDisplaySelector);
 
   if (!ytTimeDisplay) {
+    logError('addTimeControlHandler: No ytTimeDisplay');
     return;
   }
 
