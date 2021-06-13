@@ -7,7 +7,9 @@ console.log('contentScript start');
 const windowVarName = '__hideYtTimes';
 const storageName = 'hideYtTimes';
 const toggleButtonId = 'ext-time-display-show';
-const timeDisplayLabel = 'Hide/show duration and progress (s)';
+const timeDisplayLabel = 'Hide/show duration and progress (ALT + s)';
+
+let previousUrl = '';
 
 // relevant youtube selectors. ytp is youtube player
 const ytpTimeDisplaySelector = 'div.ytp-time-display';
@@ -181,6 +183,20 @@ const observer = new MutationObserver((mutationsList, observer) => {
 
     updateVisual();
   }
+
+  /**
+   * when starting from youtube homepage to a video while hiding progress,
+   * the toggleButton won't be rendered. we add toggleButton if it doesn't exist
+   */
+  if (location.href !== previousUrl) {
+    previousUrl = location.href;
+
+    const toggleButton = document.querySelector(toggleButtonId);
+
+    if (!toggleButton) {
+      addTimeControlHandler();
+    }
+  }
 });
 
 // run this at beginning to set the default variable
@@ -196,9 +212,9 @@ window.onload = (event) => {
   // TODO: append toggle button on player load (instead of after page load)
   addTimeControlHandler();
 
-  // hotkey `s` for same behavior as button
+  // hotkey `alt` + `s` for same behavior as button
   document.onkeyup = (event) => {
-    if (event.code === 'KeyS') {
+    if (event.altKey && event.code === 'KeyS') {
       toggleHideShow();
     }
   };

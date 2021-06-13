@@ -25,11 +25,11 @@ When watching vods of matches, the video's duration is usually shown. This can b
 
 ### on the YouTube player
 - on a page with a YouTube video, the timestamp in the controls becomes clickable after the page loads. clicking this will toggle the visibility of relevant page elements: progress bar, total time, timestamps on thumbnails, timestamps on endscreen thumbnails
-- hotkey `s` anywhere on the page does the same thing as above
+- hotkey `alt` + `s` anywhere on the page does the same thing as above
 
 ### on the YouTube homepage
 - when set to hide video times, video times on the YouTube homepage are also hidden
-- there is no video player here, but the hotkey `s` also works here
+- there is no video player here, but the hotkey `alt` + `s` also works here
 
 ### other areas
 - not yet tested
