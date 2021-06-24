@@ -1,5 +1,6 @@
 // console.log('serviceWorker');
 
+// TODO: use module and import this const from constants instead?
 const storageName = 'hideYtTimes';
 
 // set initial value to true

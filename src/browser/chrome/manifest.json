@@ -1,21 +1,27 @@
 {
   "name": "YouTube Observer",
   "description": "Hide progress bar / duration when watching YouTube videos",
-  "version": "0.2",
-  "manifest_version": 2,
+  "version": "0.3",
+  "manifest_version": 3,
   "content_scripts": [
     {
       "matches": ["https://*.youtube.com/*"],
+      "exclude_matches": [],
       "run_at": "document_start",
       "js": ["contentScript.js"]
     }
   ],
   "background": {
-    "scripts": ["serviceWorker.js"]
+    "service_worker": "serviceWorker.js"
   },
-  "permissions": ["storage"],
-  "browser_action": {
-    "default_icon": "images/cloak.png",
+  "permissions": ["storage", "scripting"],
+  "action": {
     "default_popup": "popup.html"
+  },
+  "icons": {
+    "16": "/images/icon.png",
+    "32": "/images/icon.png",
+    "48": "/images/icon.png",
+    "128": "/images/icon.png"
   }
 }

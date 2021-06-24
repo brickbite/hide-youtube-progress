@@ -7,15 +7,20 @@ Note: This extension is currently in developer mode, and is not yet published.
 
 When watching vods of matches, the video's duration is usually shown. This can be telling of the result, since video length can correlate to how close or one-sided the match was. By hiding info such as the progress bar and video duration, this extension brings the watching experience closer to that of a live stream.
 
-## Installing the extension
+## Building and Loading the extension in the browser
+
+Node is required to build the extension.
+Note: The minimum supported Node.js version to run webpack 5 is 10.13.0 (LTS)
+
+Running `yarn build:all` builds the extension into a dist directory, where it can then be loaded to the browser.
 
 ### Chrome:
 1. navigate to `chrome://extensions` - turn on developer mode at the top right
-2. `Load Unpacked`, select the /chrome directory
+2. `Load Unpacked`, select the `dist/chrome` directory
 
 ### Mozilla Firefox:
 1. navigate to `about:debugging#/runtime/this-firefox`
-2. `Load Temporary Add-on`, select the `manifest.json` file in the /firefox directory
+2. `Load Temporary Add-on`, select the `manifest.json` file in the `dist/firefox` directory
 
 ## Using the extension
 
@@ -36,6 +41,10 @@ When watching vods of matches, the video's duration is usually shown. This can b
 - not yet tested
 
 ## Version History
+
+### v0.3 - 2021-06-24
+- updates icon
+- improves developer process: adds usage of webpack and fs script to minimize duplication (but also require a build process)
 
 ### v0.2 - 2021-06-11
 - adds usage of window.__hideYtTimes to determine whether to hide or show

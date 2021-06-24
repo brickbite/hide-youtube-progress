@@ -1,24 +1,9 @@
-/**
- * to hide things before they have a chance to render to DOM,
- * this configuration is set in manifest.json: `"run_at": "document_start"`
- */
-console.log('contentScript start');
+// collection of shared functions
 
-const windowVarName = '__hideYtTimes';
-const storageName = 'hideYtTimes';
-const extTimeDurationId = 'ext-time-duration-show';
-const timeDisplayLabel = 'Hide/show duration and progress (ALT + s)';
-
-// relevant youtube selectors. ytp is youtube player
-const ytPlayerSelector = 'ytd-player';
-const ytpTimeDisplaySelector = 'div.ytp-time-display';
-const ytpTotalTimeSelector = 'span.ytp-time-duration';
-const ytpProgressBarSelector = 'div.ytp-progress-bar-container';
-const ytpEndscreenTimeSelector = 'span.ytp-videowall-still-info-duration';
-const thumbnailTimeSelector = 'ytd-thumbnail-overlay-time-status-renderer';
-const commentsSectionSelector = 'ytd-comments';
-
-const relevantSelectors = [
+import {
+  windowVarName,
+  extTimeDurationId,
+  timeDisplayLabel,
   ytPlayerSelector,
   ytpTimeDisplaySelector,
   ytpTotalTimeSelector,
@@ -26,25 +11,13 @@ const relevantSelectors = [
   ytpEndscreenTimeSelector,
   thumbnailTimeSelector,
   commentsSectionSelector,
-];
+} from './constants';
 
-function logError(error) {
+export function logError(error) {
   console.error(error);
 }
 
-function getStorageVar() {
-  // Note: Once the Storage API gains promise support, this function can be greatly simplified.
-  return new Promise((resolve, reject) => {
-    chrome.storage.local.get(storageName, (items) => {
-      if (chrome.runtime.lastError) {
-        return reject(chrome.runtime.lastError);
-      }
-      resolve(items);
-    });
-  });
-}
-
-function updateWindowVar(initial) {
+export function updateWindowVar(initial) {
   if (window[windowVarName] === undefined) {
     window[windowVarName] = initial;
   } else {
@@ -52,14 +25,7 @@ function updateWindowVar(initial) {
   }
 }
 
-function setInitialWindowVar() {
-  return getStorageVar().then((result) => {
-    // new windows will initially show/hide based on the value in storage
-    updateWindowVar(result[storageName]);
-  }, logError);
-}
-
-function updateElementVisibility(element) {
+export function updateElementVisibility(element) {
   if (!element || !element.style) {
     // logError('updateElementVisibility: No element or no element.style');
     return;
@@ -79,7 +45,7 @@ function updateElementVisibility(element) {
   }
 }
 
-function updateYtpDurationToggle(durationToggle) {
+export function updateYtpDurationToggle(durationToggle) {
   if (!durationToggle) {
     // logError('updateYtpDurationToggle: No durationToggle');
     return;
@@ -93,7 +59,7 @@ function updateYtpDurationToggle(durationToggle) {
   }
 }
 
-function selectAndUpdateElement(selector, node = document) {
+export function selectAndUpdateElement(selector, node = document) {
   const element = node.querySelector(selector);
   if (!element) {
     // logError('selectAndUpdateElement: No element');
@@ -106,7 +72,7 @@ function selectAndUpdateElement(selector, node = document) {
 /*****************
  * remove times from thumbnails while browsing lists and player endscreen
  *****************/
-function updateThumbnailTimestamps() {
+export function updateThumbnailTimestamps() {
   const thumbnailTimes = [...document.querySelectorAll(thumbnailTimeSelector)];
   thumbnailTimes.forEach(updateElementVisibility);
 
@@ -119,14 +85,14 @@ function updateThumbnailTimestamps() {
 /*****************
  * updates visibility of comments section
  *****************/
-function updateCommentsSection() {
+export function updateCommentsSection() {
   selectAndUpdateElement(commentsSectionSelector);
 }
 
 /*****************
  * update relevant elements on video player
  *****************/
-function updateVideoPlayer(node) {
+export function updateVideoPlayer(node) {
   if (!node || !(node instanceof Element) || !node.matches(ytPlayerSelector)) {
     // logError('updateVideoPlayer: node is not a YouTube player node');
     return;
@@ -165,7 +131,7 @@ function updateVideoPlayer(node) {
 /*****************
  * hide or show relevant elements on current page
  *****************/
-function updateVisual() {
+export function updateVisual() {
   updateThumbnailTimestamps();
   updateCommentsSection();
 
@@ -184,7 +150,7 @@ function updateVisual() {
 /*****************
  * function to toggle per page, used after page has loaded
  *****************/
-function toggleHideShow() {
+export function toggleHideShow() {
   // console.log('toggleHideShow')
   updateWindowVar();
   updateVisual();
@@ -193,7 +159,7 @@ function toggleHideShow() {
 /*****************
  * indicator that shows when video player's duration is being hidden
  *****************/
-function createShowDurationDisplay() {
+export function createShowDurationDisplay() {
   const durationToggle = document.createElement('span');
   durationToggle.setAttribute('id', extTimeDurationId);
   durationToggle.textContent = 'Show';
@@ -204,55 +170,44 @@ function createShowDurationDisplay() {
   return durationToggle;
 }
 
-// this implementation uses MutationObserver API
-// reference: https://developer.mozilla.org/en-US/docs/Web/API/MutationObserver
-
-// Select the node that will be observed for mutations
-const targetNode = document;
-
-// Options for the observer (which mutations to observe)
-const config = { attributes: true, childList: true, subtree: true };
-
-// Create an observer instance
-const observer = new MutationObserver((mutationsList, observer) => {
-  for (const mutation of mutationsList) {
-    if (mutation.type !== 'childList') {
-      return;
-    }
-
-    for (const node of mutation.addedNodes) {
-      if (node.nodeType !== Node.ELEMENT_NODE) {
-        continue;
-      }
-
-      updateVisual();
-    }
+export function setDocumentObserver(observerCallback) {
+  if (!observerCallback || typeof observerCallback !== 'function') {
+    logError('setDocumentObserver: invalid callback')
   }
+  // this implementation uses MutationObserver API
+  // reference: https://developer.mozilla.org/en-US/docs/Web/API/MutationObserver
 
-  /**
-   * Note: doing updateVisual() here (outisde of mutationsList) will make
-   * the element pop up first, then be hidden from dom after it's been rendered
-   */
-});
+  // Select the node that will be observed for mutations
+  const targetNode = document;
 
-// run this at beginning to set the default variable
-setInitialWindowVar().then(() => {
+  // Options for the observer (which mutations to observe)
+  const config = { attributes: true, childList: true, subtree: true };
+
+  // Create an observer instance
+  const observer = new MutationObserver(observerCallback);
+
   // this continues to observe while we're on the page, so any new content (added by actions such as scrolling) will be correctly shown / hidden
   observer.observe(targetNode, config);
-}, logError);
+}
 
-// add keyboard shortcut after page has loaded
-window.onload = (event) => {
-  console.log('page is loaded');
+export function setWindowEvents() {
+  if (!window) {
+    logError('setWindowEvents: no window');
+    return;
+  }
+  // add keyboard shortcut after page has loaded
+  window.onload = (event) => {
+    console.log('page is loaded');
 
-  // hotkey `alt` + `s` for same behavior as button
-  document.onkeydown = (event) => {
-    if (event.altKey && event.code === 'KeyS') {
-      toggleHideShow();
-    }
+    // hotkey `alt` + `s` for same behavior as button
+    document.onkeydown = (event) => {
+      if (event.altKey && event.code === 'KeyS') {
+        toggleHideShow();
+      }
+    };
   };
-};
 
-window.onbeforeunload = (event) => {
-  observer.disconnect();
-};
+  window.onbeforeunload = (event) => {
+    observer.disconnect();
+  };
+}

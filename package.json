@@ -1,0 +1,19 @@
+{
+  "name": "hide-youtube-progress",
+  "version": "0.0.3",
+  "main": "index.js",
+  "repository": "https://github.com/brickbite/hide-youtube-progress.git",
+  "author": "brickbite",
+  "license": "MIT",
+  "private": true,
+  "scripts": {
+    "makeDist": "node makeDist.js",
+    "build:chrome": "yarn makeDist chrome && webpack --config chrome.config.js",
+    "build:firefox": "yarn makeDist firefox && webpack --config firefox.config.js",
+    "build:all": "yarn build:chrome && yarn build:firefox"
+  },
+  "devDependencies": {
+    "webpack": "^5.40.0",
+    "webpack-cli": "^4.7.2"
+  }
+}
