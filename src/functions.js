@@ -172,7 +172,7 @@ export function createShowDurationDisplay() {
 
 export function setDocumentObserver(observerCallback) {
   if (!observerCallback || typeof observerCallback !== 'function') {
-    logError('setDocumentObserver: invalid callback')
+    logError('setDocumentObserver: invalid callback');
   }
   // this implementation uses MutationObserver API
   // reference: https://developer.mozilla.org/en-US/docs/Web/API/MutationObserver
@@ -196,7 +196,7 @@ export function setWindowEvents() {
     return;
   }
   // add keyboard shortcut after page has loaded
-  window.onload = (event) => {
+  window.onload = () => {
     console.log('page is loaded');
 
     // hotkey `alt` + `s` for same behavior as button
@@ -207,7 +207,8 @@ export function setWindowEvents() {
     };
   };
 
-  window.onbeforeunload = (event) => {
-    observer.disconnect();
-  };
+  // TODO: get observer in this scope
+  // window.onbeforeunload = () => {
+  //   observer.disconnect();
+  // };
 }

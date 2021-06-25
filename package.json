@@ -8,11 +8,16 @@
   "private": true,
   "scripts": {
     "makeDist": "node makeDist.js",
-    "build:chrome": "yarn makeDist chrome && webpack --config chrome.config.js",
-    "build:firefox": "yarn makeDist firefox && webpack --config firefox.config.js",
-    "build:all": "yarn build:chrome && yarn build:firefox"
+    "build:chrome": "yarn run makeDist chrome && webpack --config chrome.config.js",
+    "build:firefox": "yarn run makeDist firefox && webpack --config firefox.config.js",
+    "build:all": "yarn build:chrome && yarn build:firefox",
+    "lint": "eslint"
   },
   "devDependencies": {
+    "eslint": "^7.29.0",
+    "eslint-config-prettier": "^8.3.0",
+    "eslint-plugin-prettier": "^3.4.0",
+    "prettier": "^2.3.1",
     "webpack": "^5.40.0",
     "webpack-cli": "^4.7.2"
   }

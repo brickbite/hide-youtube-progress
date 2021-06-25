@@ -3,7 +3,7 @@
  * this configuration is set in manifest.json: `"run_at": "document_start"`
  */
 
-import { storageName } from '../../constants';
+import { storageName, ytpTimeDisplaySelector } from '../../constants';
 
 import {
   logError,
@@ -26,7 +26,7 @@ function setInitialWindowVar() {
   }, logError);
 }
 
-function observerCallback(mutationsList, observer) {
+function observerCallback(mutationsList) {
   for (const mutation of mutationsList) {
     if (mutation.type !== 'childList') {
       return;
@@ -38,7 +38,7 @@ function observerCallback(mutationsList, observer) {
       }
 
       const selected = node.querySelector(ytpTimeDisplaySelector);
-      if (!!selected) {
+      if (selected) {
         updateVideoPlayer();
       }
 

@@ -39,9 +39,9 @@ async function makeExtensionDirectory(browserName) {
  * this script expects an argument to know which browser to copy to
  * eg: `node makeDist.js chrome`
  */
-const browser = process.argv[2]
+const browser = process.argv[2];
 if (!browser) {
-  console.error(`makeDist: browser: ${browser}`)
+  console.error(`makeDist: browser: ${browser}`);
   process.exit();
 }
 

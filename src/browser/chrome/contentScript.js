@@ -32,7 +32,7 @@ function setInitialWindowVar() {
   }, logError);
 }
 
-function observerCallback(mutationsList, observer) {
+function observerCallback(mutationsList) {
   for (const mutation of mutationsList) {
     if (mutation.type !== 'childList') {
       return;
