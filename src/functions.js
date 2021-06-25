@@ -11,6 +11,7 @@ import {
   ytpEndscreenTimeSelector,
   thumbnailTimeSelector,
   commentsSectionSelector,
+  relevantYtSelectors,
 } from './constants';
 
 export function logError(error) {
@@ -170,10 +171,41 @@ export function createShowDurationDisplay() {
   return durationToggle;
 }
 
-export function setDocumentObserver(observerCallback) {
-  if (!observerCallback || typeof observerCallback !== 'function') {
-    logError('setDocumentObserver: invalid callback');
+function observerCallback(mutationsList) {
+  for (const mutation of mutationsList) {
+    if (mutation.type !== 'childList') {
+      return;
+    }
+
+    for (const node of mutation.addedNodes) {
+      if (node.nodeType !== Node.ELEMENT_NODE) {
+        continue;
+      }
+
+      const selected = node.querySelector(ytpTotalTimeSelector);
+      if (selected) {
+        // hide this immediately (if applicable) so no time is shown
+        updateElementVisibility(selected);
+
+        const totalTimes = node.querySelectorAll(ytpTotalTimeSelector);
+        totalTimes.forEach((durationNode) => {
+          const ytPlayer = durationNode.closest(ytPlayerSelector);
+          updateVideoPlayer(ytPlayer);
+        });
+      }
+
+      const selectorMatches = relevantYtSelectors.some((selector) => {
+        return !!node.querySelector(selector);
+      });
+
+      if (selectorMatches) {
+        updateVisual();
+      }
+    }
   }
+}
+
+export function setDocumentObserver() {
   // this implementation uses MutationObserver API
   // reference: https://developer.mozilla.org/en-US/docs/Web/API/MutationObserver
 
@@ -188,27 +220,22 @@ export function setDocumentObserver(observerCallback) {
 
   // this continues to observe while we're on the page, so any new content (added by actions such as scrolling) will be correctly shown / hidden
   observer.observe(targetNode, config);
-}
 
-export function setWindowEvents() {
-  if (!window) {
-    logError('setWindowEvents: no window');
-    return;
-  }
-  // add keyboard shortcut after page has loaded
-  window.onload = () => {
-    console.log('page is loaded');
+  if (window) {
+    // add keyboard shortcut after page has loaded
+    window.onload = () => {
+      console.log('page is loaded');
 
-    // hotkey `alt` + `s` for same behavior as button
-    document.onkeydown = (event) => {
-      if (event.altKey && event.code === 'KeyS') {
-        toggleHideShow();
-      }
+      // hotkey `alt` + `s` for same behavior as button
+      document.onkeydown = (event) => {
+        if (event.altKey && event.code === 'KeyS') {
+          toggleHideShow();
+        }
+      };
     };
-  };
 
-  // TODO: get observer in this scope
-  // window.onbeforeunload = () => {
-  //   observer.disconnect();
-  // };
+    window.onbeforeunload = () => {
+      observer.disconnect();
+    };
+  }
 }

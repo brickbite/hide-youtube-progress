@@ -3,15 +3,12 @@
  * this configuration is set in manifest.json: `"run_at": "document_start"`
  */
 
-import { storageName, ytpTimeDisplaySelector } from '../../constants';
+import { storageName } from '../../constants';
 
 import {
   logError,
   updateWindowVar,
   setDocumentObserver,
-  setWindowEvents,
-  updateVideoPlayer,
-  updateVisual,
 } from '../../functions';
 
 function getStorageVar() {
@@ -26,35 +23,5 @@ function setInitialWindowVar() {
   }, logError);
 }
 
-function observerCallback(mutationsList) {
-  for (const mutation of mutationsList) {
-    if (mutation.type !== 'childList') {
-      return;
-    }
-
-    for (const node of mutation.addedNodes) {
-      if (node.nodeType !== Node.ELEMENT_NODE) {
-        continue;
-      }
-
-      const selected = node.querySelector(ytpTimeDisplaySelector);
-      if (selected) {
-        updateVideoPlayer();
-      }
-
-      // const selectorMatches = relevantSelectors.some((selector) => {
-      //   return !!node.querySelector(selector);
-      // });
-
-      // if (selectorMatches) {
-      // updateVisual();
-      // }
-    }
-    updateVisual();
-  }
-}
-
 // run this at beginning to set the default variable
-setInitialWindowVar().then(setDocumentObserver(observerCallback), logError);
-
-setWindowEvents();
+setInitialWindowVar().then(setDocumentObserver, logError);
