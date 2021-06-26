@@ -171,12 +171,19 @@ export function createShowDurationDisplay() {
   return durationToggle;
 }
 
+/*****************
+ * callback for DOM changes used by MutationObserver
+ *****************/
 function observerCallback(mutationsList) {
   for (const mutation of mutationsList) {
+    // youtube homepage seems to fall under a different mutationtype
+    // blanket calling updateVisual is used to cover that case for now
     if (mutation.type !== 'childList') {
+      updateVisual();
       return;
     }
 
+    // the rest here covers other types of pages like youtube player
     for (const node of mutation.addedNodes) {
       if (node.nodeType !== Node.ELEMENT_NODE) {
         continue;
