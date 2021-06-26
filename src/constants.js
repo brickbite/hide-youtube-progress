@@ -10,6 +10,7 @@ export const ytPlayerSelector = 'ytd-player';
 export const ytpTimeDisplaySelector = 'div.ytp-time-display';
 export const ytpTotalTimeSelector = 'span.ytp-time-duration';
 export const ytpProgressBarSelector = 'div.ytp-progress-bar-container';
+export const ytpCeDurationSelector = '.ytp-ce-video-duration';
 export const ytpEndscreenTimeSelector =
   'span.ytp-videowall-still-info-duration';
 export const thumbnailTimeSelector =

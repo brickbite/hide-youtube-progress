@@ -8,6 +8,7 @@ import {
   ytpTimeDisplaySelector,
   ytpTotalTimeSelector,
   ytpProgressBarSelector,
+  ytpCeDurationSelector,
   ytpEndscreenTimeSelector,
   thumbnailTimeSelector,
   commentsSectionSelector,
@@ -76,6 +77,9 @@ export function selectAndUpdateElement(selector, node = document) {
 export function updateThumbnailTimestamps() {
   const thumbnailTimes = [...document.querySelectorAll(thumbnailTimeSelector)];
   thumbnailTimes.forEach(updateElementVisibility);
+
+  const ceDurations = [...document.querySelectorAll(ytpCeDurationSelector)];
+  ceDurations.forEach(updateElementVisibility);
 
   const endscreenTimes = [
     ...document.querySelectorAll(ytpEndscreenTimeSelector),
