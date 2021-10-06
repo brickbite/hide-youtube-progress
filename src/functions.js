@@ -47,9 +47,9 @@ export function updateElementVisibility(element) {
   }
 }
 
-export function updateYtpDurationToggle(durationToggle) {
+export function updatePlayerDurationShow(durationToggle) {
   if (!durationToggle) {
-    // logError('updateYtpDurationToggle: No durationToggle');
+    // logError('updatePlayerDurationShow: No durationToggle');
     return;
   }
 
@@ -112,25 +112,25 @@ export function updateVideoPlayer(node) {
   // there should only durationToggle per player. check if any existing before adding.
   let durationToggle = node.querySelector(`#${extTimeDurationId}`);
   if (!durationToggle) {
-    const ytpTimeDisplay = node.querySelector(ytpTimeDisplaySelector);
+    const playerDuration = node.querySelector(ytpTimeDisplaySelector);
 
-    if (!ytpTimeDisplay) {
-      // logError('updateVideoPlayer: No ytpTimeDisplay');
+    if (!playerDuration) {
+      // logError('updateVideoPlayer: No playerDuration');
       return;
     }
 
-    ytpTimeDisplay.onclick = toggleHideShow;
-    ytpTimeDisplay.style.cursor = 'pointer';
-    ytpTimeDisplay.setAttribute('aria-label', timeDisplayLabel);
-    ytpTimeDisplay.setAttribute('title', timeDisplayLabel);
+    playerDuration.onclick = toggleHideShow;
+    playerDuration.style.cursor = 'pointer';
+    playerDuration.setAttribute('aria-label', timeDisplayLabel);
+    playerDuration.setAttribute('title', timeDisplayLabel);
 
     durationToggle = createShowDurationDisplay();
 
     // TODO: element ordering when the live indicator is showing?
-    ytpTimeDisplay.append(durationToggle);
+    playerDuration.append(durationToggle);
   }
 
-  updateYtpDurationToggle(durationToggle);
+  updatePlayerDurationShow(durationToggle);
 }
 
 /*****************
@@ -170,7 +170,7 @@ export function createShowDurationDisplay() {
   durationToggle.textContent = 'Show';
 
   // set initial display style
-  updateYtpDurationToggle(durationToggle);
+  updatePlayerDurationShow(durationToggle);
 
   return durationToggle;
 }
@@ -200,8 +200,8 @@ function observerCallback(mutationsList) {
 
         const totalTimes = node.querySelectorAll(ytpTotalTimeSelector);
         totalTimes.forEach((durationNode) => {
-          const ytPlayer = durationNode.closest(ytPlayerSelector);
-          updateVideoPlayer(ytPlayer);
+          const videoPlayer = durationNode.closest(ytPlayerSelector);
+          updateVideoPlayer(videoPlayer);
         });
       }
 
